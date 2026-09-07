@@ -72,7 +72,7 @@ export default function TopUpModal({
         </h2>
         <p id="topup-modal-description" className="text-gray-400 text-sm">
           Enter the amount of {token} to add to this stream. This will extend the
-          stream's duration or increase the flow rate.
+          stream&apos;s duration or increase the flow rate.
         </p>
 
         <div className="space-y-2">

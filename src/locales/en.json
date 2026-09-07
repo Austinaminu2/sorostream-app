@@ -15,7 +15,8 @@
     "title": "Dashboard",
     "new_stream": "+ New Stream",
     "no_streams": "No streams yet",
-    "create_first": "Create your first stream →"
+    "create_first": "Create your first stream →",
+    "manual_refresh": "Refresh now"
   },
   "stream_new": {
     "title": "Create Stream",

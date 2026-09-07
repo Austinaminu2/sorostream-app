@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NetworkSelector from "@/components/NetworkSelector";
@@ -17,6 +17,10 @@ import { useGlobalShortcuts } from "@/components/GlobalShortcuts";
 import RpcHealthIndicator from "@/components/RpcHealthIndicator";
 import { useNetwork } from "@/src/lib/network";
 
+const HORIZON_URL = process.env.NEXT_PUBLIC_RPC_URL
+  ? process.env.NEXT_PUBLIC_RPC_URL.replace("/rpc/v1", "")
+  : "https://horizon-testnet.stellar.org";
+
 const NAV_LINKS = [
   { href: "/", key: "home" },
   { href: "/dashboard", key: "dashboard" },
@@ -33,7 +37,7 @@ export default function NavHeader() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const { countFor, clearSection } = useNotifications();
-  const { showUsd, toggleShowUsd } = useSettings();
+  const { showUsd, toggleShowUsd, language } = useSettings();
   const { address, balanceRefreshTrigger } = useWallet();
   const { network } = useNetwork();
   const [xlmBalance, setXlmBalance] = useState<string | null>(null);

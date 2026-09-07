@@ -60,6 +60,7 @@ import {
 } from "@/src/lib/share";
 import StreamShareButtons from "@/components/StreamShareButtons";
 import StreamCloneModal from "@/components/StreamCloneModal";
+import SaveTemplateModal from "@/components/SaveTemplateModal";
 import StreamAnalyticsCharts from "@/components/StreamAnalyticsCharts";
 
 /** Grace period in seconds before a cancel is submitted on-chain. */
@@ -1937,7 +1938,7 @@ export default function StreamDetail({ params }: { params: { id: string } }) {
         <SaveTemplateModal
           open={showSaveTemplateModal}
           onClose={() => setShowSaveTemplateModal(false)}
-          durationSeconds={stream.endTime - stream.startTime}
+          durationSeconds={(new Date(stream.endTime).getTime() - new Date(stream.startTime).getTime()) / 1000}
           amount={formatStellarAmount(stream.deposit)}
           recipient={stream.recipient}
           token={stream.token}

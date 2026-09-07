@@ -15,7 +15,8 @@
     "title": "Panel de Control",
     "new_stream": "+ Nuevo Flujo",
     "no_streams": "No hay flujos todavía",
-    "create_first": "Cree su primer flujo →"
+    "create_first": "Cree su primer flujo →",
+    "manual_refresh": "Actualizar ahora"
   },
   "stream_new": {
     "title": "Crear Flujo",

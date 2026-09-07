@@ -79,7 +79,6 @@ export const Error: Story = {
     (Story) => {
       // Dynamically override the exported function so this story always
       // lands in the error branch.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const mod = require("@/src/lib/sorostream") as {
         simulateTransactionFee: () => Promise<unknown>;
       };

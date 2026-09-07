@@ -15,7 +15,8 @@
     "title": "Painel",
     "new_stream": "+ Novo Fluxo",
     "no_streams": "Nenhum fluxo ainda",
-    "create_first": "Crie seu primeiro fluxo →"
+    "create_first": "Crie seu primeiro fluxo →",
+    "manual_refresh": "Atualizar agora"
   },
   "stream_new": {
     "title": "Criar Fluxo",

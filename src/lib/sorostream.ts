@@ -28,6 +28,14 @@ export interface StreamData {
   metadataUri?: string;
   /** Optional short plaintext memo attached at creation time. */
   memo?: string;
+  /** ISO timestamp when vesting cliff ends. */
+  cliffTime?: string;
+  /** Vesting schedule data points. */
+  vestingData?: unknown[];
+  /** Token decimal places for display formatting. */
+  decimals?: number;
+  /** Amount already withdrawn from the stream, in stroops. */
+  withdrawnStroops?: number;
 }
 
 /**

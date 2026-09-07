@@ -85,8 +85,8 @@ export default function PublicStreamViewerPage() {
 
   const streamStarted = stream && now >= new Date(stream.startTime).getTime();
   const streamEnded = stream && now >= new Date(stream.endTime).getTime();
-  const claimable = stream ? claimableNow(stream, now) : 0;
-  const claimableFormatted = stream ? formatStellarAmount(claimable, stream.decimals) : "0";
+  const claimable = stream ? claimableNow(stream) : 0;
+  const claimableFormatted = stream ? formatStellarAmount(Number(claimable)) : "0";
 
   const timelineData = useMemo(() => {
     if (!stream) return null;
@@ -122,7 +122,7 @@ export default function PublicStreamViewerPage() {
               {error || "Stream not found"}
             </h1>
             <p className="text-red-700 dark:text-red-300 mb-4">
-              The stream you're looking for doesn't exist or could not be loaded.
+              The stream you&apos;re looking for doesn&apos;t exist or could not be loaded.
             </p>
             <Link href="/" className="inline-block bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
               Return Home
@@ -164,11 +164,11 @@ export default function PublicStreamViewerPage() {
 
         {/* Share buttons */}
         <div className="mb-6">
-          <StreamShareButtons streamId={stream.id} isPublicView={true} />
+          <StreamShareButtons streamId={stream.id} />
         </div>
 
         {/* Completion banner */}
-        {streamEnded && <StreamCompletedBanner stream={stream} />}
+        {streamEnded && stream && <StreamCompletedBanner streamId={stream.id} finalAmount={claimableFormatted} token={stream.token} onClaim={() => {}} />}
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -219,7 +219,7 @@ export default function PublicStreamViewerPage() {
                     Total Amount
                   </p>
                   <p className="text-xl font-bold text-gray-900 dark:text-white">
-                    {formatStellarAmount(stream.deposit, stream.decimals)}
+                    {formatStellarAmount(stream.deposit)}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     {stream.token}
@@ -230,7 +230,7 @@ export default function PublicStreamViewerPage() {
                     Claimed
                   </p>
                   <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                    {formatStellarAmount(stream.claimed, stream.decimals)}
+                    {formatStellarAmount(stream.withdrawnStroops ?? 0)}
                   </p>
                 </div>
                 <div>
@@ -247,15 +247,15 @@ export default function PublicStreamViewerPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Total (USD)</p>
-                      <FiatDisplay amount={formatStellarAmount(stream.deposit, stream.decimals)} token={stream.token} className="text-lg font-bold" />
+                      <FiatDisplay xlmAmount={stream.deposit / 10_000_000} />
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Claimed (USD)</p>
-                      <FiatDisplay amount={formatStellarAmount(stream.claimed, stream.decimals)} token={stream.token} className="text-lg font-bold text-green-600 dark:text-green-400" />
+                      <FiatDisplay xlmAmount={(stream.withdrawnStroops ?? 0) / 10_000_000} />
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 dark:text-gray-400">Claimable (USD)</p>
-                      <FiatDisplay amount={claimableFormatted} token={stream.token} className="text-lg font-bold text-blue-600 dark:text-blue-400" />
+                      <FiatDisplay xlmAmount={Number(claimable) / 10_000_000} />
                     </div>
                   </div>
                 </div>
@@ -264,20 +264,20 @@ export default function PublicStreamViewerPage() {
 
             {/* Progress bar */}
             <StreamErrorBoundary section="Progress Bar">
-              <StreamProgressBar stream={stream} currentTime={now} />
+              <StreamProgressBar stream={stream} />
             </StreamErrorBoundary>
 
             {/* Timeline */}
             {timelineData && (
               <StreamErrorBoundary section="Timeline">
-                <StreamTimeline data={timelineData} />
+                <StreamTimeline startTime={stream.startTime} endTime={stream.endTime} sender={stream.sender} recipient={stream.recipient} status={stream.status} flowRate={stream.flowRate} />
               </StreamErrorBoundary>
             )}
 
             {/* Vesting Chart */}
             {stream.vestingData && stream.vestingData.length > 0 && (
               <StreamErrorBoundary section="Vesting Chart">
-                <VestingChart stream={stream} currentTime={now} />
+                <VestingChart stream={stream} history={[]} />
               </StreamErrorBoundary>
             )}
           </div>
@@ -307,7 +307,7 @@ export default function PublicStreamViewerPage() {
               </p>
               {!streamStarted && (
                 <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                  Starts in <CountdownTimer targetTime={new Date(stream.startTime).getTime()} />
+                  Starts in <CountdownTimer endTime={stream.startTime} />
                 </p>
               )}
             </div>
@@ -322,7 +322,7 @@ export default function PublicStreamViewerPage() {
               </p>
               {!streamEnded && streamStarted && (
                 <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                  Ends in <CountdownTimer targetTime={new Date(stream.endTime).getTime()} />
+                  Ends in <CountdownTimer endTime={stream.endTime} />
                 </p>
               )}
             </div>
@@ -333,13 +333,10 @@ export default function PublicStreamViewerPage() {
                 Remaining
               </p>
               <p className="text-xl font-bold text-gray-900 dark:text-white">
-                {formatStellarAmount(
-                  stream.deposit - stream.claimed,
-                  stream.decimals
-                )}
+                {formatStellarAmount(stream.deposit - (stream.withdrawnStroops ?? 0))}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {((100 * (stream.deposit - stream.claimed)) / stream.deposit).toFixed(1)}% of total
+                {((100 * (stream.deposit - (stream.withdrawnStroops ?? 0))) / stream.deposit).toFixed(1)}% of total
               </p>
             </div>
           </div>

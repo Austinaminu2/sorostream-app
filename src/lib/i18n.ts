@@ -38,7 +38,7 @@ export function useTranslations<N extends Namespace>(namespace: N) {
     const raw = namespaceDict?.[key] ?? fallbackDict?.[key] ?? key;
     if (!vars) return raw;
     return Object.entries(vars).reduce(
-      (str, [k, v]) => str.replaceAll(`{{$k}}`, w),
+      (str, [k, v]) => str.replaceAll(`{${k}}`, v),
       raw
     );
   };

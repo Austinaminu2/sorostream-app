@@ -26,6 +26,7 @@ import WatchlistTab from "@/components/WatchlistTab";
 import StreamCard from "@/components/StreamCard";
 import ThemeToggle from "@/components/ThemeToggle";
 import PullToRefresh from "@/components/PullToRefresh";
+import WalletAnalyticsDashboard from "@/components/WalletAnalyticsDashboard";
 
 type DashboardState = "loading" | "filtered-empty" | "empty" | "ready";
 
@@ -103,6 +104,8 @@ function DashboardContent() {
   const [multiSelectMode, setMultiSelectMode] = useState(false);
   const [showBulkCancelConfirm, setShowBulkCancelConfirm] = useState(false);
   const [optimisticOps, setOptimisticOps] = useState<Record<string, { type: string; optimisticDeposit?: number; optimisticStatus?: string; optimisticClaimable?: number }>>({});
+  const [, setLastRefreshTime] = useState<number>(Date.now());
+  const [, setIsRefreshing] = useState(false);
 
   // Pagination state (#383)
   const [visibleCount, setVisibleCount] = useState(12);
@@ -1153,8 +1156,7 @@ function DashboardContent() {
                        </div>
                     </div>
                   </section>
-                  );
-                })}
+                ))}
               </div>
             ) : groupBy === "tag" ? (
               <div className="space-y-6">

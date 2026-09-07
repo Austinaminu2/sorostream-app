@@ -68,7 +68,7 @@ export default function TransactionTimeline({ entries }: TransactionTimelineProp
   const { network } = useNetwork();
 
   const getExplorerUrl = (txHash: string): string => {
-    if (network === "public") {
+    if (network === "mainnet") {
       return `https://stellar.expert/explorer/public/tx/${txHash}`;
     }
     return `https://stellar.expert/explorer/testnet/tx/${txHash}`;
@@ -122,14 +122,14 @@ export default function TransactionTimeline({ entries }: TransactionTimelineProp
                       {config.label}
                     </p>
                     <p className="text-xs text-gray-400 mt-1">
-                      {formatDateUtc(entry.timestamp, "en")}
+                      {formatDateUtc(entry.timestamp)}
                     </p>
                   </div>
                   {entry.amount && (
                     <div className="text-right">
                       <p className={`font-mono text-sm ${config.color}`}>
                         {entry.type === "withdrawal" ? "-" : "+"}
-                        {formatUSDC(Number(entry.amount))}
+                        {formatUSDC(BigInt(entry.amount))}
                       </p>
                     </div>
                   )}
@@ -144,7 +144,7 @@ export default function TransactionTimeline({ entries }: TransactionTimelineProp
                     className="text-xs text-blue-400 hover:text-blue-300 hover:underline inline-flex items-center gap-1 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-blue-400 rounded px-1"
                     aria-label={`View transaction ${truncateAddress(entry.txHash)} on explorer`}
                   >
-                    <span>{truncateAddress(entry.txHash, 8, 4)}</span>
+                    <span>{truncateAddress(entry.txHash)}</span>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="12"

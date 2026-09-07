@@ -1,6 +1,6 @@
-import { InputAttributes, ReactNode } from "react";
+import { InputHTMLAttributes, ReactNode } from "react";
 
-interface InputProps extends InputHtmlAttributes<HTMLInputElement> {
+interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   suffix?: ReactNode;
 }

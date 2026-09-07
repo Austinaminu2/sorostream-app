@@ -169,24 +169,3 @@ export async function isFreighterInstalled(): Promise<boolean> {
   return !!(window as { freighter?: unknown }).freighter;
 }
 
-export class SessionExpiredWalletError extends Error {
-  constructor(message = "Wallet session has expired. Please reconnect your wallet.") {
-    super(message);
-    this.name = "SessionExpiredWalletError";
-  }
-}
-
-export function isSessionExpiredError(error: unknown): boolean {
-  if (error instanceof SessionExpiredWalletError) return true;
-  if (!error) return false;
-  const msg = (error instanceof Error ? error.message : String(error)).toLowerCase();
-  return (
-    msg.includes("xdr") ||
-    msg.includes("session") ||
-    msg.includes("freighter") ||
-    msg.includes("timed out")
-  );
-}
-
-export const FRIENDLY_SESSION_EXPIRED_MESSAGE =
-  "Your wallet session has expired or timed out. Please reconnect your wallet to continue.";

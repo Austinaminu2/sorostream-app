@@ -1038,7 +1038,7 @@ function NewStreamWizard() {
                   if (dotIndex !== -1) {
                     cleaned = cleaned.slice(0, dotIndex + 1) + cleaned.slice(dotIndex + 1).replace(/\./g, "");
                   }
-                  if (cleaned !== pasted && cleaned !== e.target.value) {
+                  if (cleaned !== pasted && cleaned !== (e.target as HTMLInputElement).value) {
                     e.preventDefault();
                     setAmount(cleaned);
                     if (touched.amount) {
