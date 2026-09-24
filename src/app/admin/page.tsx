@@ -557,6 +557,7 @@ export default function AdminPage() {
               <button
                 type="button"
                 role="switch"
+                aria-label={contractState.paused ? "Unpause contract" : "Pause contract"}
                 aria-checked={contractState.paused}
                 onClick={handleTogglePause}
                 disabled={pauseSubmitting || contractLoading}
