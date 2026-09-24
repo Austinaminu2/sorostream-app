@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFocusTrap } from "@/src/lib/useFocusTrap";
 import type { StreamData } from "@/src/lib/sorostream";
@@ -33,6 +33,15 @@ export default function StreamCloneModal({ stream, onClose }: StreamCloneModalPr
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, true);
+
+  // Close on Escape key
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   const durationSeconds = Math.round(
     (new Date(stream.endTime).getTime() - new Date(stream.startTime).getTime()) / 1000,

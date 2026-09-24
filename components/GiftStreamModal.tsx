@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, type FormEvent } from "react";
+import { useState, useRef, useEffect, type FormEvent } from "react";
 import { useFocusTrap } from "@/src/lib/useFocusTrap";
 import { sorostream } from "@/src/lib/sorostream";
 import { useWallet } from "@/src/context/WalletContext";
@@ -66,6 +66,15 @@ export default function GiftStreamModal({ onClose }: GiftStreamModalProps) {
   const { addToast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, true);
+
+  // Close on Escape key
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   const [step, setStep] = useState<GiftStep>("form");
   const [result, setResult] = useState<GiftResult | null>(null);
