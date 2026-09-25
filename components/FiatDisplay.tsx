@@ -2,7 +2,8 @@
 /**
  * FiatDisplay — shows a USD equivalent for an XLM amount.
  *
- * - Fetches XLM/USD from CoinGecko (5-minute cache via useXlmPrice).
+ * - Reads XLM/USD from the shared XlmPriceContext (issue #582).
+ *   All FiatDisplay instances on the page share one price fetch — no duplicate API calls.
  * - Respects the user's "showUsd" setting from SettingsContext.
  * - Shows "Price unavailable" gracefully when the feed is unreachable.
  * - Renders nothing while loading the first price to avoid layout shift.
@@ -14,7 +15,7 @@
  *   <FiatDisplay xlmAmount={12.5} />
  *   // renders: (~$1.56 USD)
  */
-import { useXlmPrice } from "@/src/lib/useXlmPrice";
+import { useSharedXlmPrice } from "@/src/context/XlmPriceContext";
 import { useSettings } from "@/src/context/SettingsContext";
 import { useTranslations } from "@/src/lib/i18n";
 
@@ -27,7 +28,7 @@ interface FiatDisplayProps {
 
 export default function FiatDisplay({ xlmAmount, usdcAmount }: FiatDisplayProps) {
   const t = useTranslations("common");
-  const { price, loading } = useXlmPrice();
+  const { price, loading } = useSharedXlmPrice();
   const { showUsd, language } = useSettings();
 
   if (!showUsd) return null;
