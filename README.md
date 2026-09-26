@@ -52,8 +52,9 @@ rebuild is required directly in [`.env.example`](./.env.example).
 | `NEXT_PUBLIC_RPC_URL` | No | Yes | Custom Soroban RPC endpoint (defaults to testnet public RPC) |
 | `NEXT_PUBLIC_VITALS_ENDPOINT` | No | No | URL to receive Web Vitals POST payloads |
 | `NEXT_PUBLIC_FEE_SPONSOR_ADDRESS` | No | Yes | Stellar public key of fee sponsor for fee-bump transactions |
-| `NEXT_PUBLIC_ADMIN_ADDRESS` | No | Yes | Comma-separated Stellar public key(s) for the `/admin` page |
-| `NEXT_PUBLIC_ADMIN_WALLET` | No | Yes | Deprecated alias for `NEXT_PUBLIC_ADMIN_ADDRESS` |
+| `NEXT_PUBLIC_ADMIN_ADDRESSES` | Production | Yes | Comma-separated Stellar public keys allowed to access `/admin` |
+| `NEXT_PUBLIC_ADMIN_ADDRESS` | No | Yes | Deprecated alias for `NEXT_PUBLIC_ADMIN_ADDRESSES` |
+| `NEXT_PUBLIC_ADMIN_WALLET` | No | Yes | Deprecated alias for `NEXT_PUBLIC_ADMIN_ADDRESSES` |
 | `NEXT_PUBLIC_APP_URL` | No | Yes | Base URL for Open Graph / Twitter Card metadata |
 | `NEXT_PUBLIC_RPC_DEGRADED_MS` | No | Yes | RPC latency (ms) threshold for degraded indicator (default: `2000`) |
 | `NEXT_PUBLIC_RPC_UNREACHABLE_BANNER_S` | No | Yes | Seconds unreachable before full-width banner appears (default: `60`) |

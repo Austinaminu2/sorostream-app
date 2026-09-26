@@ -29,7 +29,7 @@ npm run lint   # ESLint check
 | `NEXT_PUBLIC_STELLAR_NETWORK` | `testnet` or `mainnet` |
 | `NEXT_PUBLIC_CONTRACT_ID` | Deployed StreamContract address |
 | `NEXT_PUBLIC_RPC_URL` | Soroban RPC endpoint |
-| `NEXT_PUBLIC_ADMIN_ADDRESS` | Comma-separated list of admin wallet public keys for `/admin` |
+| `NEXT_PUBLIC_ADMIN_ADDRESSES` | Comma-separated list of admin wallet public keys for `/admin` |
 
 ## Project Structure
 

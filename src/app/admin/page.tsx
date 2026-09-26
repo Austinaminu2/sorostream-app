@@ -2,9 +2,10 @@
 /**
  * /admin — Admin dashboard.
  *
- * Gated to the configured admin wallet (#211): connected non-admin wallets
- * are redirected away with an error toast; disconnected visitors see a
- * connect-wallet prompt instead of the dashboard content.
+ * Gated to the configured admin wallets (#211, #559): only addresses listed in
+ * NEXT_PUBLIC_ADMIN_ADDRESSES may view the page. Connected non-admin wallets
+ * and visitors with no wallet are redirected to / with an "Access denied"
+ * toast. When no admin addresses are configured, every wallet is denied.
  *
  * Sections:
  * - Contract Status: paused/active, current fee rate, whitelist size
@@ -49,15 +50,26 @@ import { useXlmPrice } from "@/src/lib/useXlmPrice";
 import { useWallet } from "@/src/context/WalletContext";
 import { useToast } from "@/src/lib/toast";
 
-// ── Env-configurable admin wallet address(es) ───────────────────────────────
-// Prefer NEXT_PUBLIC_ADMIN_ADDRESS. A comma-separated list enables multiple
-// admin wallets. NEXT_PUBLIC_ADMIN_WALLET remains a backward-compatible alias.
+// ── Env-configurable admin wallet addresses ─────────────────────────────────
+// NEXT_PUBLIC_ADMIN_ADDRESSES is a comma-separated list of admin wallets.
+// NEXT_PUBLIC_ADMIN_ADDRESS and NEXT_PUBLIC_ADMIN_WALLET remain
+// backward-compatible aliases. Each var is referenced literally so Next.js
+// inlines it into the client bundle.
 const ADMIN_ADDRESS_SOURCE =
-  process.env.NEXT_PUBLIC_ADMIN_ADDRESS ?? process.env.NEXT_PUBLIC_ADMIN_WALLET ?? "";
+  process.env.NEXT_PUBLIC_ADMIN_ADDRESSES ||
+  process.env.NEXT_PUBLIC_ADMIN_ADDRESS ||
+  process.env.NEXT_PUBLIC_ADMIN_WALLET ||
+  "";
 
 const ADMIN_ADDRESSES = ADMIN_ADDRESS_SOURCE.split(/[\s,]+/)
   .map((address) => address.trim())
   .filter(Boolean);
+
+/**
+ * How long to wait for a previously connected wallet to be restored after a
+ * page load before treating the visitor as unauthenticated.
+ */
+const WALLET_RESTORE_GRACE_MS = 1500;
 
 const STREAM_PAGE_SIZES = [10, 25, 50] as const;
 type StreamPageSize = (typeof STREAM_PAGE_SIZES)[number];
@@ -290,7 +302,7 @@ function WhitelistSection({ tokens, isAdmin, onAdd, onRemove, pending }: Whiteli
 
 export default function AdminPage() {
   const router = useRouter();
-  const { address } = useWallet();
+  const { address, isConnecting } = useWallet();
   const { price: xlmPrice } = useXlmPrice();
   const { addToast } = useToast();
 
@@ -343,14 +355,25 @@ export default function AdminPage() {
   // client-side addresses.
   const isAdmin = Boolean(address && ADMIN_ADDRESSES.includes(address));
 
-  // Non-admin wallets are redirected away from /admin with an error message.
+  // Non-admin wallets are redirected immediately. Visitors with no wallet get
+  // a short grace period so a session being restored on reload isn't bounced.
   useEffect(() => {
-    if (address && ADMIN_ADDRESSES.length > 0 && !isAdmin) {
-      addToast("Access denied: this page is restricted to the protocol admin wallet.", "error");
-      router.replace("/dashboard");
+    if (isAdmin || isConnecting) return;
+
+    const deny = () => {
+      addToast("Access denied", "error");
+      router.replace("/");
+    };
+
+    if (address) {
+      deny();
+      return;
     }
+
+    const timer = setTimeout(deny, WALLET_RESTORE_GRACE_MS);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address, isAdmin]);
+  }, [address, isAdmin, isConnecting]);
 
   const fetchBalances = useCallback(async () => {
     try {
@@ -466,20 +489,9 @@ export default function AdminPage() {
     }
   }, [feeInput, addToast, fetchContractState]);
 
-  // Disconnected visitors get a connect prompt rather than the dashboard.
-  if (!address) {
-    return (
-      <main className="min-h-screen bg-gray-900 text-white p-4 sm:p-8">
-        <div className="max-w-lg mx-auto text-center py-20">
-          <h1 className="text-xl font-bold mb-2">Admin Dashboard</h1>
-          <p className="text-gray-400 text-sm">Connect the protocol admin wallet to continue.</p>
-        </div>
-      </main>
-    );
-  }
-
-  // Non-admin wallets: render nothing while the redirect above takes effect.
-  if (ADMIN_ADDRESSES.length > 0 && !isAdmin) {
+  // Anyone who isn't a configured admin sees nothing while the redirect above
+  // takes effect.
+  if (!isAdmin) {
     return null;
   }
 
@@ -501,17 +513,6 @@ export default function AdminPage() {
             ← Dashboard
           </Link>
         </div>
-
-        {/* Admin wallet notice */}
-        {ADMIN_ADDRESSES.length === 0 && (
-          <div
-            role="note"
-            className="mb-6 rounded-lg bg-yellow-900/30 border border-yellow-700 text-yellow-300 text-sm px-4 py-3"
-          >
-            <strong>NEXT_PUBLIC_ADMIN_ADDRESS</strong> is not configured. Admin
-            controls will not appear until an admin address is set.
-          </div>
-        )}
 
         {/* Contract status summary */}
         <section aria-labelledby="status-heading" className="mb-6 bg-gray-800 rounded-xl border border-gray-700 px-5 py-4">
@@ -572,19 +573,7 @@ export default function AdminPage() {
                 />
               </button>
             )}
-            <strong>NEXT_PUBLIC_ADMIN_ADDRESS</strong> is not configured. The
-            Sweep Fees button will not appear until at least one admin address is set.
           </div>
-
-        {address && ADMIN_ADDRESSES.length > 0 && !isAdmin && (
-          <div
-            role="note"
-            className="mb-6 rounded-lg bg-gray-800 border border-gray-700 text-gray-400 text-sm px-4 py-3"
-          >
-            Connected as <span className="font-mono text-gray-300">{address}</span>. Sweep
-            controls are only available to the configured admin wallet addresses.
-          </div>
-        )}
         </section>
 
         {/* Fee Rate configuration */}
