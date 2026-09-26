@@ -26,6 +26,7 @@ import { RpcUnreachableBanner } from "@/components/RpcHealthIndicator";
 import RateLimitBanner from "@/components/RateLimitBanner";
 import { RateLimitProvider } from "@/src/context/RateLimitContext";
 import ContractVersionBanner from "@/components/ContractVersionBanner";
+import { XlmPriceProvider } from "@/src/context/XlmPriceContext";
 
 validateEnv();
 initAnalytics();
@@ -85,30 +86,32 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <ThemeProvider>
                 <NetworkProvider>
                   <ToastProvider>
-                    <NotificationProvider>
-                      <GlobalShortcutsProvider>
-                        <ContractVersionProvider>
-                          <RateLimitProvider>
-                            <NavHeader />
-                            <RpcUnreachableBanner />
-                            <RateLimitBanner />
-                            <ContractVersionBanner />
-                            <PageViewTracker />
-                            <WebVitalsReporter />
-                            <PwaInit />
-                            <InstallPrompt />
-                            <div className="flex-1">
-                              {children}
-                            </div>
-                            <AppFooter />
-                            <BottomNav />
-                            <OnboardingWizard />
-                            <SessionWarningToast />
-                            <SessionTimeoutModal />
-                          </RateLimitProvider>
-                        </ContractVersionProvider>
-                      </GlobalShortcutsProvider>
-                    </NotificationProvider>
+                    <XlmPriceProvider>
+                      <NotificationProvider>
+                        <GlobalShortcutsProvider>
+                          <ContractVersionProvider>
+                            <RateLimitProvider>
+                              <NavHeader />
+                              <RpcUnreachableBanner />
+                              <RateLimitBanner />
+                              <ContractVersionBanner />
+                              <PageViewTracker />
+                              <WebVitalsReporter />
+                              <PwaInit />
+                              <InstallPrompt />
+                              <div className="flex-1">
+                                {children}
+                              </div>
+                              <AppFooter />
+                              <BottomNav />
+                              <OnboardingWizard />
+                              <SessionWarningToast />
+                              <SessionTimeoutModal />
+                            </RateLimitProvider>
+                          </ContractVersionProvider>
+                        </GlobalShortcutsProvider>
+                      </NotificationProvider>
+                    </XlmPriceProvider>
                   </ToastProvider>
                 </NetworkProvider>
               </ThemeProvider>

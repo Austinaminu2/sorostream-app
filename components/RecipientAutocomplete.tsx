@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { getContacts, type AddressBookContact } from "@/src/lib/addressBook";
 import { resolveFederationName } from "@/src/lib/federation";
 
+/** Debounce delay in ms for federation/horizon lookups (issue #579). */
+const LOOKUP_DEBOUNCE_MS = 300;
+
 interface RecipientAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
@@ -41,49 +44,79 @@ export default function RecipientAutocomplete({
     address: string | null;
     error: string | null;
   }>({ status: "idle", address: null, error: null });
-  const federationTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Refs for debounce timer and AbortController (issue #579)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     setContacts(getContacts(senderAddress));
   }, [senderAddress]);
 
-  // Federation lookup effect - triggered when value contains * (federation address)
+  // Federation lookup effect — debounced 300 ms, in-flight requests cancelled
+  // on each new keystroke via AbortController (issue #579).
   useEffect(() => {
-    if (federationTimeoutRef.current) {
-      clearTimeout(federationTimeoutRef.current);
+    // Cancel any pending debounce timer
+    if (debounceTimerRef.current !== null) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    // Abort any in-flight lookup from a previous debounce cycle
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
 
-    // Reset federation state if input doesn't contain *
+    // Reset federation state if input doesn't contain * (not a federation address)
     if (!value.includes("*")) {
       setFederationResolution({ status: "idle", address: null, error: null });
       return;
     }
 
-    // Set resolving state and trigger lookup with debounce
+    // Show "resolving" immediately so the user sees feedback, then debounce the
+    // actual network request by LOOKUP_DEBOUNCE_MS after the last keystroke.
     setFederationResolution({ status: "resolving", address: null, error: null });
 
-    federationTimeoutRef.current = setTimeout(async () => {
-      try {
-        const resolved = await resolveFederationName(value);
-        if (resolved) {
-          // Federation address resolved to a G-address
-          setFederationResolution({ status: "resolved", address: resolved, error: null });
-          // Auto-update the value to the resolved G-address
-          onChange(resolved);
-        } else {
-          setFederationResolution({ status: "failed", address: null, error: "Federation address not found" });
+    debounceTimerRef.current = setTimeout(() => {
+      // Create a fresh AbortController for this lookup attempt
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      void (async () => {
+        try {
+          const resolved = await resolveFederationName(value);
+
+          // If the request was aborted while we were awaiting, discard the result
+          if (controller.signal.aborted) return;
+
+          if (resolved) {
+            setFederationResolution({ status: "resolved", address: resolved, error: null });
+            // Auto-update the field to the resolved G-address
+            onChange(resolved);
+          } else {
+            setFederationResolution({ status: "failed", address: null, error: "Federation address not found" });
+          }
+        } catch (err) {
+          if (controller.signal.aborted) return;
+          setFederationResolution({
+            status: "failed",
+            address: null,
+            error: err instanceof Error ? err.message : "Federation lookup failed",
+          });
         }
-      } catch (err) {
-        setFederationResolution({
-          status: "failed",
-          address: null,
-          error: err instanceof Error ? err.message : "Federation lookup failed",
-        });
-      }
-    }, 500);
+      })();
+    }, LOOKUP_DEBOUNCE_MS);
 
     return () => {
-      if (federationTimeoutRef.current) clearTimeout(federationTimeoutRef.current);
+      // Cleanup on unmount or before next effect run
+      if (debounceTimerRef.current !== null) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     };
   }, [value, onChange]);
 
