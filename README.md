@@ -23,7 +23,9 @@ npm install
 
 # 2. Configure environment
 cp .env.example .env.local
-# Edit .env.local — see .env.example for inline docs on each variable
+# Edit .env.local — .env.example lists every NEXT_PUBLIC_* variable with a
+# one-line description; entries marked "# Required in production" must be set
+# before deploying to mainnet.
 
 # 3. Run dev server
 npm run dev
@@ -56,6 +58,7 @@ rebuild is required directly in [`.env.example`](./.env.example).
 | `NEXT_PUBLIC_RPC_DEGRADED_MS` | No | Yes | RPC latency (ms) threshold for degraded indicator (default: `2000`) |
 | `NEXT_PUBLIC_RPC_UNREACHABLE_BANNER_S` | No | Yes | Seconds unreachable before full-width banner appears (default: `60`) |
 | `NEXT_PUBLIC_CONTRACT_VERSION` | No | Yes | Expected deployed contract version; mismatch shows a refresh banner |
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Production | Yes | Web Push VAPID public key; empty falls back to in-tab notifications |
 
 ## Web Vitals
 
