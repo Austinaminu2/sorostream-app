@@ -117,7 +117,11 @@ function markComplete() {
   }
 }
 
-export default function OnboardingWizard() {
+interface OnboardingWizardProps {
+  onComplete?: () => void;
+}
+
+export default function OnboardingWizard({ onComplete }: OnboardingWizardProps = {}) {
   const router = useRouter();
   const { address, connect, isConnecting } = useWallet();
   const [open, setOpen] = useState(false);
@@ -154,14 +158,16 @@ export default function OnboardingWizard() {
   const finish = useCallback(() => {
     markComplete();
     trackEvent({ type: "onboarding_complete" });
+    onComplete?.();
     setOpen(false);
     router.push("/dashboard");
-  }, [router]);
+  }, [router, onComplete]);
 
   const skip = useCallback(() => {
     trackEvent({ type: "onboarding_skip", step, stepId: current.id });
-    markComplete();
-    setOpen(false);
+    // Skipping jumps straight to the final "You're all set" step so the user
+    // can still complete setup from a known end state.
+    setStep(STEPS.length - 1);
   }, [step, current.id]);
 
   const advance = useCallback(async () => {
