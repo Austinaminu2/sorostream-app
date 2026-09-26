@@ -3,7 +3,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import LiveCounter from "@/components/LiveCounter";
 import WithdrawFeeBreakdownModal from "@/components/WithdrawFeeBreakdownModal";
-import { sorostream, claimableNow, getMockStream, truncateAddress } from "@/src/lib/sorostream";
+import {
+  sorostream,
+  claimableNow,
+  getMockStream,
+  getRemainingBalance,
+  formatStellarAmount,
+  truncateAddress,
+} from "@/src/lib/sorostream";
 import { useToast } from "@/src/lib/toast";
 import { useSettings } from "@/src/context/SettingsContext";
 import { useWallet } from "@/src/context/WalletContext";
@@ -71,6 +78,19 @@ export default function StreamActions({
    * and the batched state update that sets `withdrawing = true`.
    */
   const withdrawingRef = useRef(false);
+  const dismissCancelRef = useRef<HTMLButtonElement | null>(null);
+
+  // Focus the safe "Cancel" action when the confirmation opens and let Escape
+  // dismiss it without submitting anything.
+  useEffect(() => {
+    if (!showCancelConfirm) return;
+    dismissCancelRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowCancelConfirm(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [showCancelConfirm]);
 
   useEffect(() => {
     return () => {
@@ -216,6 +236,7 @@ export default function StreamActions({
             role="dialog"
             aria-modal="true"
             aria-labelledby="cancel-confirm-title"
+            aria-describedby="cancel-confirm-description"
             className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
           >
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm space-y-4 border border-gray-200 dark:border-gray-700">
@@ -225,41 +246,53 @@ export default function StreamActions({
               >
                 Cancel stream #{streamId}?
               </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Cancellation is irreversible. Any remaining deposit stays with the sender and the stream stops immediately.
+              <p
+                id="cancel-confirm-description"
+                className="text-sm text-gray-600 dark:text-gray-400"
+              >
+                Cancellation is irreversible. The stream stops immediately and the
+                unstreamed balance is returned to the sender.
               </p>
-              {stream && (
-                <dl className="text-sm space-y-1 rounded-lg bg-gray-100 dark:bg-gray-700 p-3">
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-gray-500 dark:text-gray-400">Status</dt>
-                    <dd className="text-gray-900 dark:text-white">{stream.status}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-gray-500 dark:text-gray-400">From</dt>
-                    <dd className="text-gray-900 dark:text-white font-mono">{truncateAddress(stream.sender)}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-gray-500 dark:text-gray-400">To</dt>
-                    <dd className="text-gray-900 dark:text-white font-mono">{truncateAddress(stream.recipient)}</dd>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <dt className="text-gray-500 dark:text-gray-400">Deposit</dt>
-                    <dd className="text-gray-900 dark:text-white">{(stream.deposit / 10_000_000).toFixed(2)} {stream.token}</dd>
-                  </div>
-                </dl>
-              )}
+              <dl className="text-sm space-y-1 rounded-lg bg-gray-100 dark:bg-gray-700 p-3">
+                <div className="flex justify-between gap-3">
+                  <dt className="text-gray-500 dark:text-gray-400">Stream ID</dt>
+                  <dd className="text-gray-900 dark:text-white font-mono">#{streamId}</dd>
+                </div>
+                {stream && (
+                  <>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-gray-500 dark:text-gray-400">Recipient</dt>
+                      <dd
+                        className="text-gray-900 dark:text-white font-mono"
+                        title={stream.recipient}
+                      >
+                        {truncateAddress(stream.recipient)}
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <dt className="text-gray-500 dark:text-gray-400">Returned to sender</dt>
+                      <dd className="text-gray-900 dark:text-white font-mono">
+                        {formatStellarAmount(getRemainingBalance(stream))} {stream.token}
+                      </dd>
+                    </div>
+                  </>
+                )}
+              </dl>
               <div className="flex gap-3 pt-1">
                 <button
+                  ref={dismissCancelRef}
+                  type="button"
                   onClick={() => setShowCancelConfirm(false)}
                   className="flex-1 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-500"
                 >
-                  Keep Stream
+                  Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={handleCancelConfirmed}
                   className="flex-1 bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                 >
-                  Cancel Stream
+                  Confirm Cancel
                 </button>
               </div>
             </div>
@@ -315,7 +348,7 @@ export default function StreamActions({
           ) : cancelPending ? (
             "Undo Cancel"
           ) : (
-            "Cancel"
+            "Cancel stream"
           )}
         </button>
       </div>
