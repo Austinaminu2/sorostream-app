@@ -2,16 +2,18 @@
 
 interface SkeletonProps {
   className?: string;
+  style?: React.CSSProperties;
 }
 
 interface StreamListSkeletonProps {
   label?: string;
 }
 
-export function Skeleton({ className = "" }: SkeletonProps) {
+export function Skeleton({ className = "", style }: SkeletonProps) {
   return (
     <div
       className={`animate-pulse bg-gray-200 dark:bg-gray-700 rounded ${className}`}
+      style={style}
       aria-hidden="true"
     />
   );
